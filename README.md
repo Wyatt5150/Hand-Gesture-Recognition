@@ -21,4 +21,4 @@ Set Up Environment
 # Running The Project
 
 Set your Conda Environment
-1. Run "conda activate {environment_name}"
+1. Run "conda activate CS4337"

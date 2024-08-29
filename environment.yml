@@ -1,0 +1,6 @@
+name: CS4337
+channels:
+  - defaults
+dependencies:
+  - python
+  - pandas 
