@@ -22,3 +22,5 @@ Set Up Environment
 
 Set your Conda Environment
 1. Run "conda activate CS4337"
+2. Run "conda env update --file environment.yml" To update your environment to the latest dependencies
+3. 
