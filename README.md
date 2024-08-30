@@ -19,7 +19,7 @@ Set Up Environment
 1. Open project folder in your IDE
 2. Create initial Conda environment, run in terminal:
 
-    conda env create --file environment.yml"
+    conda env create --file environment.yml
 
 
 # Running The Project
@@ -33,4 +33,4 @@ Set your Conda Environment
     conda env update --file environment.yml 
 3. To run the project:
 
-    ./main.py
+    python main.py
