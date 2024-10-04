@@ -12,36 +12,46 @@ from torchvision import transforms
 from PIL import Image
 from models.model import SignLanguageCNN  # Now this should work correctly
 
+# Add the project root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-def load_version(version):
+
+def load_latest_checkpoint(checkpoint_dir):
     """
-    Load a specific version of the trained model.
+    Load the latest checkpoint from the specified directory.
 
     Parameters:
-        version (int): The version number of the model to load.
+        checkpoint_dir (str): The directory where the checkpoints are stored.
 
     Returns:
         model (SignLanguageCNN): The loaded model.
     """
-    # Define the path to the model checkpoint
-    model_path = os.path.join('C:/Users/Lopez/Documents/Hand-Gesture-Recognition/tb_logs/sign_language_mnist_model/version_0/checkpoints/epoch=29-val_loss=0.00.ckpt')
+    checkpoint_files = [f for f in os.listdir(checkpoint_dir) if f.endswith('.ckpt')]
+    if not checkpoint_files:
+        raise FileNotFoundError("No checkpoint files found in the directory.")
 
+    checkpoint_files = sorted(checkpoint_files, key=lambda f: os.path.getmtime(os.path.join(checkpoint_dir, f)))
+    latest_checkpoint = checkpoint_files[-1]
 
-    # Load the model
-    model = SignLanguageCNN.load_from_checkpoint(model_path)
-    model.eval()  # Set the model to evaluation mode
+    print(f"Loading latest checkpoint: {latest_checkpoint}")
+    model_path = os.path.join(checkpoint_dir, latest_checkpoint)
+
+    model = SignLanguageCNN()
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'))["state_dict"], strict=False)
+    model.eval()
 
     return model
-
 
 
 def main():
     """
     Main function to run the gesture recognition model using webcam input.
     """
-    # Load the version 0 model
-    model = load_version(0)  # Load the model version you want
+    # Define the path to the checkpoint directory
+    checkpoint_dir = os.path.join('..', 'tb_logs', 'sign_language_mnist_model', 'version_26', 'checkpoints')
 
+    # Load the latest checkpoint
+    model = load_latest_checkpoint(checkpoint_dir)
 
     # MediaPipe for hand tracking
     mp_hands = mp.solutions.hands
@@ -138,6 +148,7 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
