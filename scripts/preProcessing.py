@@ -8,27 +8,22 @@ import pytorch_lightning as pl
 from torchvision import transforms
 
 
+# noinspection PyInterpreter
 class SignLanguageMNISTDataModule(pl.LightningDataModule):
     """
     A PyTorch Lightning DataModule for loading the Sign Language MNIST dataset.
 
     This module handles loading, preprocessing, and splitting the dataset into training,
     validation, and test sets.
-
-    Parameters:
-    - data_dir (str): The directory where the dataset CSV files are located. Default is
-      'C:\\Users\\Lopez\\Documents\\Hand-Gesture-Recognition\\data'.
-    - batch_size (int): The number of samples per batch. Default is 64.
-
-    Example:
-    >>> data_module = SignLanguageMNISTDataModule()
-    >>> data_module.prepare_data()
-    >>> data_module.setup()
     """
 
-    def __init__(self, data_dir='C:\\Users\\Lopez\\Documents\\Hand-Gesture-Recognition\\data', batch_size=64):
+    def __init__(self, data_dir=None, batch_size=64):
         super().__init__()
-        self.data_dir = data_dir
+        # Define the relative path to the 'data' folder, which is at the same level as 'scripts'
+        if data_dir is None:
+            self.data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+        else:
+            self.data_dir = data_dir
         self.batch_size = batch_size
         self.transform = transforms.Compose([
             transforms.ToTensor(),
@@ -42,11 +37,7 @@ class SignLanguageMNISTDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         """
         Set up the dataset for training, validation, and testing.
-
-        Parameters:
-        - stage (str): The stage of training ('fit', 'test', etc.). If None, setups all stages.
         """
-        train_csv = f'{self.data_dir}\\sign_mnist_train.csv'
         if stage == 'fit' or stage is None:
             train_csv = os.path.join(self.data_dir, 'sign_mnist_train.csv')
             print(f"Loading training data from: {train_csv}")  # Debug print
@@ -79,14 +70,6 @@ class SignLanguageMNIST(Dataset):
     A custom Dataset class for the Sign Language MNIST dataset.
 
     This class loads image data from a CSV file and returns images and their corresponding labels.
-
-    Parameters:
-    - csv_file (str): Path to the CSV file containing the dataset.
-    - transform (callable, optional): A function/transform to apply to the images.
-
-    Example:
-    >>> dataset = SignLanguageMNIST(csv_file='path/to/sign_mnist_train.csv', transform=my_transform)
-    >>> image, label = dataset[0]  # Get the first image and its label
     """
 
     def __init__(self, csv_file, transform=None):
@@ -100,12 +83,6 @@ class SignLanguageMNIST(Dataset):
     def __getitem__(self, idx):
         """
         Get a sample from the dataset.
-
-        Parameters:
-        - idx (int): Index of the sample to retrieve.
-
-        Returns:
-        - Tuple[Tensor, int]: A tuple containing the transformed image tensor and its label.
         """
         image = self.data_frame.iloc[idx, 1:].values.astype(np.uint8).reshape(28, 28)
         image = Image.fromarray(image, 'L')
