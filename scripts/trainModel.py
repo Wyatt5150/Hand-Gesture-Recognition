@@ -75,12 +75,22 @@ class SignLanguageTraining:
         >>> trainer.train()
         """
         # Initialize trainer
+        # trainer = Trainer(
+        #     max_epochs=30,
+        #     logger=self.logger,
+        #     callbacks=[self.checkpoint_callback, self.lr_monitor, self.early_stopping_callback],
+        #     devices=12,
+        #     strategy="auto",  # Set strategy to "auto"
+        # )
+
         trainer = Trainer(
             max_epochs=30,
             logger=self.logger,
             callbacks=[self.checkpoint_callback, self.lr_monitor, self.early_stopping_callback],
-            devices=12,
-            strategy="auto",  # Set strategy to "auto"
+            devices=1,  # Use 1 GPU (if you want to use multiple GPUs, adjust this number)
+            accelerator="gpu",  # Specify GPU as the accelerator
+            strategy="auto",
+            # The strategy will automatically adjust for distributed training if multiple GPUs are used
         )
 
         # Train the model
