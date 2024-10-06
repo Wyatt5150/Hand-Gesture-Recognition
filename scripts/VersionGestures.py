@@ -1,22 +1,22 @@
-import os
 import sys
+import os
 import cv2
 import torch
 import mediapipe as mp
 import numpy as np
 from torchvision import transforms
 from PIL import Image
-
-# Add the project root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import your loaded model from the loadModel.py script
-from models.model import SignLanguageCNN
-
+from models.model import SignLanguageCNN  # Ensure this import is correct
 
 def load_model_version(version_number):
     """
     Load a specific version of the trained model.
+
+    Parameters:
+        version_number (int): The version number of the model to load.
+
+    Returns:
+        model (SignLanguageCNN): The loaded model with weights from the specified version.
     """
     # Construct the path to the checkpoint
     checkpoint_path = os.path.join(
@@ -39,6 +39,7 @@ def load_model_version(version_number):
 def main():
     """
     Main function for real-time gesture recognition using webcam input.
+    It loads a trained model, captures video from the webcam, and predicts the sign language gesture in real-time.
     """
     # Load the latest model
     version_to_load = 27  # You can change the version number if necessary
@@ -100,6 +101,9 @@ def main():
 
                 # Draw landmarks on the hand
                 mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+                # Draw a green bounding box around the detected hand
+                cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
         # Display the webcam frame
         cv2.imshow('Gesture Recognition', frame)

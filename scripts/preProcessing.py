@@ -1,94 +1,127 @@
 import os
 import pandas as pd
 import numpy as np
-from PIL import Image
 import torch
-from torch.utils.data import Dataset, DataLoader, random_split
-import pytorch_lightning as pl
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
+from pytorch_lightning import LightningDataModule
 
+# Dataset class
+class SignLanguageDataset(Dataset):
+    def __init__(self, csv_file, transform=None):
+        """
+        Initialize the SignLanguageDataset.
 
-# noinspection PyInterpreter
-class SignLanguageMNISTDataModule(pl.LightningDataModule):
-    """
-    A PyTorch Lightning DataModule for loading the Sign Language MNIST dataset.
+        Parameters:
+            csv_file (str): Path to the CSV file containing image data and labels.
+            transform (callable, optional): A function/transform to apply to the images.
+        """
+        self.data = pd.read_csv(csv_file)
+        self.transform = transform
 
-    This module handles loading, preprocessing, and splitting the dataset into training,
-    validation, and test sets.
-    """
+    def __getitem__(self, idx):
+        """
+        Get a sample from the dataset at the specified index.
 
-    def __init__(self, data_dir=None, batch_size=64):
+        Parameters:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: (image, label) where `image` is a tensor of the image and `label` is the corresponding label tensor.
+        """
+        row = self.data.iloc[idx]
+        image_data = row.iloc[1:].values.astype(np.uint8)  # The rest are pixel values
+        image = image_data.reshape(28, 28)
+        label = int(row.iloc[0])  # Ensure the label is read as an integer
+        if self.transform:
+            image = self.transform(image)  # This will already be a tensor if a transform is applied
+
+        # Ensure that `image` and `label` are tensors by using `.clone().detach()` if they already are
+        return image.clone().detach(), torch.tensor(label)
+
+    def __len__(self):
+        """
+        Return the total number of samples in the dataset.
+
+        Returns:
+            int: The number of samples in the dataset.
+        """
+        return len(self.data)
+
+# DataModule class
+class SignLanguageMNISTDataModule(LightningDataModule):
+    def __init__(self, train_csv, val_csv, test_csv, batch_size=32):
+        """
+        Initialize the SignLanguageMNISTDataModule.
+
+        Parameters:
+            train_csv (str): Path to the training CSV file.
+            val_csv (str): Path to the validation CSV file.
+            test_csv (str): Path to the testing CSV file.
+            batch_size (int): Batch size for the DataLoader (default: 32).
+        """
         super().__init__()
-        # Define the relative path to the 'data' folder, which is at the same level as 'scripts'
-        if data_dir is None:
-            self.data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
-        else:
-            self.data_dir = data_dir
+        self.train_csv = train_csv
+        self.val_csv = val_csv
+        self.test_csv = test_csv
         self.batch_size = batch_size
-        self.transform = transforms.Compose([
+
+        # Define the transformations
+        self.train_transforms = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))  # Normalize with mean and std deviation
+        ])
+        self.val_transforms = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))
+        ])
+        self.test_transforms = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,))
         ])
 
-    def prepare_data(self):
-        """No download needed as data is already in data_dir."""
-        pass
-
     def setup(self, stage=None):
         """
-        Set up the dataset for training, validation, and testing.
-        """
-        if stage == 'fit' or stage is None:
-            train_csv = os.path.join(self.data_dir, 'sign_mnist_train.csv')
-            print(f"Loading training data from: {train_csv}")  # Debug print
-            train_dataset = SignLanguageMNIST(csv_file=train_csv, transform=self.transform)
+        Setup the datasets for training, validation, and testing.
 
-            num_train = int(len(train_dataset) * 0.8)
-            num_val = len(train_dataset) - num_train
-            self.train_dataset, self.val_dataset = random_split(train_dataset, [num_train, num_val])
+        Parameters:
+            stage (str, optional): The stage for which to setup the datasets. Can be 'fit' for training/validation
+                                   or 'test' for testing. If None, sets up all datasets.
+        """
+        # Initialize datasets for training, validation, and testing
+        if stage == 'fit' or stage is None:
+            self.train_dataset = SignLanguageDataset(self.train_csv, transform=self.train_transforms)
+            self.val_dataset = SignLanguageDataset(self.val_csv, transform=self.val_transforms)
 
         if stage == 'test' or stage is None:
-            test_csv = os.path.join(self.data_dir, 'sign_mnist_test.csv')
-            print(f"Loading testing data from: {test_csv}")  # Debug print
-            self.test_dataset = SignLanguageMNIST(csv_file=test_csv, transform=self.transform)
+            self.test_dataset = SignLanguageDataset(self.test_csv, transform=self.test_transforms)
 
     def train_dataloader(self):
-        """Return the DataLoader for training data."""
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
+        """
+        Create the DataLoader for the training dataset.
+
+        Returns:
+            DataLoader: DataLoader for the training dataset.
+        """
+        self.setup('fit')  # Ensure dataset is set up before returning the dataloader
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
 
     def val_dataloader(self):
-        """Return the DataLoader for validation data."""
-        return DataLoader(self.val_dataset, batch_size=self.batch_size)
+        """
+        Create the DataLoader for the validation dataset.
+
+        Returns:
+            DataLoader: DataLoader for the validation dataset.
+        """
+        self.setup('fit')
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
 
     def test_dataloader(self):
-        """Return the DataLoader for test data."""
-        return DataLoader(self.test_dataset, batch_size=self.batch_size)
-
-
-class SignLanguageMNIST(Dataset):
-    """
-    A custom Dataset class for the Sign Language MNIST dataset.
-
-    This class loads image data from a CSV file and returns images and their corresponding labels.
-    """
-
-    def __init__(self, csv_file, transform=None):
-        self.data_frame = pd.read_csv(csv_file)
-        self.transform = transform
-
-    def __len__(self):
-        """Return the total number of samples in the dataset."""
-        return len(self.data_frame)
-
-    def __getitem__(self, idx):
         """
-        Get a sample from the dataset.
+        Create the DataLoader for the testing dataset.
+
+        Returns:
+            DataLoader: DataLoader for the testing dataset.
         """
-        image = self.data_frame.iloc[idx, 1:].values.astype(np.uint8).reshape(28, 28)
-        image = Image.fromarray(image, 'L')
-        label = int(self.data_frame.iloc[idx, 0])
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, label
+        self.setup('test')
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)

@@ -1,104 +1,64 @@
-import os  # Import the os module
-from pytorch_lightning import Trainer
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, EarlyStopping  # Import EarlyStopping
-import torch
+import os
 import sys
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import your model and data module here
+import pytorch_lightning as pl
+import torch  # Import torch for saving model weights
 from models.model import SignLanguageCNN
-from preProcessing import SignLanguageMNISTDataModule
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from scripts.preProcessing import SignLanguageMNISTDataModule
 
-class SignLanguageTraining:
-    """
-    A class for training a Sign Language recognition model using PyTorch Lightning.
-
-    This class sets up the data module, model, logger, and callbacks for training,
-    validation, and testing.
-
-    Example:
-    >>> trainer = SignLanguageTraining()
-    >>> trainer.train()
-    """
-
+class TrainModel:
     def __init__(self):
-        """
-        Initializes the SignLanguageTraining class.
-
-        Sets up the logger, callbacks, model, and data module.
-        """
-        # Define logger and checkpoint callback
-        self.logger = TensorBoardLogger(
-            os.path.join("..", "tb_logs"),  # Adjusted path to create tb_logs in the root directory
-            name="sign_language_mnist_model"
+        self.data_module = SignLanguageMNISTDataModule(
+            train_csv=os.path.join(os.path.dirname(__file__), '..', 'data', 'custom_sign_language_train.csv'),
+            val_csv=os.path.join(os.path.dirname(__file__), '..', 'data', 'custom_sign_language_val.csv'),
+            test_csv=os.path.join(os.path.dirname(__file__), '..', 'data', 'custom_sign_language_test.csv'),
+            batch_size=128
         )
-
-        self.checkpoint_callback = ModelCheckpoint(
-            monitor="val_loss",
-            save_top_k=1,
-            mode='min',
-            filename='{epoch}-{val_loss:.2f}'
-        )
-
-        self.lr_monitor = LearningRateMonitor(logging_interval='epoch')
-
-        # Add EarlyStopping callback
-        self.early_stopping_callback = EarlyStopping(
-            monitor='val_loss',  # Monitor validation loss
-            patience=3,  # Number of epochs with no improvement after which training will be stopped
-            verbose=True,
-            mode='min'  # Minimize the validation loss
-        )
-
-        # Initialize data module and model
-        self.data_module = SignLanguageMNISTDataModule()
-        self.model = SignLanguageCNN()
-
-        # Use all available CPU cores for training
-        self.devices = "auto"  # Automatically use available devices
+        self.model = SignLanguageCNN(num_classes=24, learning_rate=0.0001)
+        self.checkpoint_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'checkpoints', 'best-checkpoint.ckpt')
 
     def train(self):
-        """
-        Trains the Sign Language recognition model.
-
-        Initializes the PyTorch Lightning trainer and fits the model to the data.
-
-        Returns:
-        - None
-
-        Example:
-        >>> trainer = SignLanguageTraining()
-        >>> trainer.train()
-        """
-        # Initialize trainer
-        trainer = Trainer(
-            max_epochs=30,  # You may want to increase the number of epochs
-            logger=self.logger,
-            callbacks=[self.checkpoint_callback, self.lr_monitor, self.early_stopping_callback],
-            devices=1,
-            strategy="auto",  # Set strategy to "auto"
+        checkpoint_callback = ModelCheckpoint(
+            monitor="val_loss",
+            dirpath=os.path.join(os.path.dirname(__file__), '..', 'utils', 'checkpoints'),
+            filename="best-checkpoint",
+            save_top_k=1,
+            mode="min"
         )
 
-        # Train the model
-        trainer.fit(self.model, self.data_module)
+        early_stop_callback = EarlyStopping(
+            monitor="val_loss",
+            patience=3,
+            verbose=True,
+            mode="min"
+        )
 
-        # Test the model
-        trainer.test(self.model, datamodule=self.data_module)
+        logger = pl.loggers.TensorBoardLogger(
+            save_dir=os.path.join(os.path.dirname(__file__), '..', 'utils', 'lightning_logs'),
+            name="gesture-recognition"
+        )
 
-        # Create 'models' directory if it doesn't exist
-        models_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models')
-        if not os.path.exists(models_dir):
-            os.makedirs(models_dir)
+        trainer = pl.Trainer(
+            max_epochs=10,
+            callbacks=[checkpoint_callback, early_stop_callback],
+            logger=logger,
+            accelerator='auto',
+            devices='auto'
+        )
 
-        # Save the model weights
-        torch.save(self.model.state_dict(), os.path.join(models_dir, 'model.pth'))
-        print("Model weights saved to models/model.pth")
+        if os.path.exists(self.checkpoint_path):
+            print("Loading existing model from checkpoint...")
+            self.model = SignLanguageCNN.load_from_checkpoint(self.checkpoint_path)
 
+        trainer.fit(self.model, train_dataloaders=self.data_module.train_dataloader(), val_dataloaders=self.data_module.val_dataloader())
+        trainer.test(self.model, dataloaders=self.data_module.test_dataloader())
+
+        # Save the model weights to a .pth file
+        torch.save(self.model.state_dict(), os.path.join(os.path.dirname(__file__), '..', 'models', 'model.pth'))
 
 if __name__ == "__main__":
-    training_instance = SignLanguageTraining()
+    training_instance = TrainModel()
     training_instance.train()
