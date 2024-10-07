@@ -6,3 +6,9 @@
 __pycache__/
 *.pyc
 *~
+
+data/
+images/
+utils/checkpoints/
+utils/lightning_logs/
+models/model1.md

@@ -21,7 +21,10 @@ label_mapping = {
 
 def load_model():
     """
-    Load the trained SignLanguageCNN model from the specified checkpoint.
+    Loads the trained SignLanguageCNN model from a checkpoint file.
+
+    Returns:
+        model (SignLanguageCNN): The loaded and initialized gesture recognition model in evaluation mode.
     """
     model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'model.pth')
     model = SignLanguageCNN()
@@ -32,8 +35,14 @@ def load_model():
 
 def preprocess_image(hand_crop):
     """
-    Preprocess the cropped hand image for the model.
-    Converts the image to grayscale, resizes it to 28x28, and converts to tensor.
+    Preprocesses a cropped hand image to prepare it for input to the model.
+    Converts the image to grayscale, resizes it to 28x28 pixels, and transforms it into a tensor.
+
+    Args:
+        hand_crop (numpy.ndarray): The cropped image of the hand, as a NumPy array from OpenCV.
+
+    Returns:
+        torch.Tensor: The preprocessed image as a 4D tensor suitable for model input (batch size, channels, height, width).
     """
     transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
@@ -50,7 +59,11 @@ def preprocess_image(hand_crop):
 
 def main():
     """
-    Main function to run the gesture recognition model using webcam input.
+    Main function to run the gesture recognition model on webcam input in real-time.
+
+    Uses MediaPipe for hand tracking and captures live video feed to detect and classify hand gestures.
+    Draws hand landmarks, crops the hand region, and predicts the gesture using the loaded model.
+    Displays the predicted letter on the screen and terminates on pressing the 'q' key.
     """
     # Load the model
     model = load_model()

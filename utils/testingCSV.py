@@ -46,8 +46,15 @@ label_to_letter = {
     19: 'U', 20: 'V', 21: 'W', 22: 'X', 23: 'Y'
 }
 
-# Function to visualize random images
 def visualize_random_images(data, num_images=5, as_tensor=False):
+    """
+    Visualize random images from the dataset.
+
+    Parameters:
+        data (DataFrame): The dataset containing image data and labels.
+        num_images (int): The number of random images to visualize (default is 5).
+        as_tensor (bool): If True, converts images to tensors and prints their shapes (default is False).
+    """
     plt.figure(figsize=(10, 10))
 
     # Randomly select indices from the data
