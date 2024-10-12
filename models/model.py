@@ -5,16 +5,16 @@ from torchmetrics import Accuracy
 from pytorch_lightning import LightningModule
 
 class SignLanguageCNN(LightningModule):
-    def __init__(self, num_classes=24, learning_rate=0.0001):
+    def __init__(self, num_classes : int = 24, learning_rate : float = 0.0001) -> None:
         """
         Initializes the SignLanguageCNN model with increased features.
 
         Args:
-            num_classes (int): Number of output classes (default is 24).
-            learning_rate (float): Learning rate for the optimizer (default is 0.0001).
+            num_classes (int) : Number of output classes (default is 24).
+            learning_rate (float) : Learning rate for the optimizer (default is 0.0001).
         """
         super(SignLanguageCNN, self).__init__()
-        self.learning_rate = learning_rate
+        self.learning_rate : float = learning_rate
 
         # Convolutional layers with batch normalization to increase accuracy
         self.conv1 = nn.Sequential(
@@ -48,69 +48,69 @@ class SignLanguageCNN(LightningModule):
         self.val_accuracy = Accuracy(task='multiclass', num_classes=num_classes)
         self.test_accuracy = Accuracy(task='multiclass', num_classes=num_classes)
 
-    def forward(self, x):
+    def forward(self, tensor : torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the network.
 
         Args:
-            x (torch.Tensor): Input tensor.
+            tensor (torch.Tensor) : Input tensor.
 
         Returns:
-            torch.Tensor: Output logits from the final layer.
+            torch.Tensor : Output logits from the final layer.
         """
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
+        tensor = self.pool(F.relu(self.conv1(tensor)))
+        tensor = self.pool(F.relu(self.conv2(tensor)))
+        tensor = self.pool(F.relu(self.conv3(tensor)))
 
         # Flatten the tensor for the fully connected layers
-        x = x.view(x.size(0), -1)  # Flatten dynamically based on actual size
-        x = F.relu(self.fc1(x))
-        x = self.dropout(x)
-        x = F.relu(self.fc_middle(x))
-        x = self.fc2(x)
-        return x
+        tensor = tensor.view(tensor.size(0), -1)  # Flatten dynamically based on actual size
+        tensor = F.relu(self.fc1(tensor))
+        tensor = self.dropout(tensor)
+        tensor = F.relu(self.fc_middle(tensor))
+        tensor = self.fc2(tensor)
+        return tensor
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch : tuple, batch_idx : int) -> torch.Tensor:
         """
         Training step for the model.
 
         Args:
-            batch (tuple): Tuple containing input data and labels.
-            batch_idx (int): Batch index.
+            batch (tuple) : Tuple containing input data and labels.
+            batch_idx (int) : Batch index.
 
         Returns:
-            torch.Tensor: Loss value for the current batch.
+            torch.Tensor : Loss value for the current batch.
         """
-        x, y = batch
-        logits = self(x)
-        y = y.long()
-        loss = F.cross_entropy(logits, y)
+        input_data, labels = batch
+        logits = self(input_data)
+        labels = labels.long()
+        loss = F.cross_entropy(logits, labels)
+        acc = self.train_accuracy(logits, labels)
         self.log('train_loss', loss)
-        acc = self.train_accuracy(logits, y)
         self.log('train_acc', acc, prog_bar=True)
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch : tuple, batch_idx : int) -> dict:
         """
         Validation step for the model.
 
         Args:
-            batch (tuple): Tuple containing input data and labels.
-            batch_idx (int): Batch index.
+            batch (tuple) : Tuple containing input data and labels.
+            batch_idx (int) : Batch index.
 
         Returns:
-            dict: Dictionary containing validation loss and accuracy.
+            dict : Dictionary containing validation loss and accuracy.
         """
-        x, y = batch
-        logits = self(x)
-        y = y.long()
-        loss = F.cross_entropy(logits, y)
-        val_acc = self.val_accuracy(logits, y)
+        input_data, labels = batch
+        logits = self(input_data)
+        labels = labels.long()
+        loss = F.cross_entropy(logits, labels)
+        acc = self.val_accuracy(logits, labels)
         self.log('val_loss', loss, prog_bar=True)
-        self.log('val_acc', val_acc, prog_bar=True)
-        return {'val_loss': loss, 'val_acc': val_acc}
+        self.log('val_acc', acc, prog_bar=True)
+        return {'val_loss': loss, 'val_acc': acc}
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch : tuple, batch_idx : int) -> torch.Tensor:
         """
         Test step for the model.
 
@@ -121,13 +121,13 @@ class SignLanguageCNN(LightningModule):
         Returns:
             torch.Tensor: Loss value for the test batch.
         """
-        x, y = batch
-        logits = self(x)
-        y = y.long()
-        loss = F.cross_entropy(logits, y)
-        test_acc = self.test_accuracy(logits, y)
+        input_data, labels = batch
+        logits = self(input_data)
+        labels = labels.long()
+        loss = F.cross_entropy(logits, labels)
+        acc = self.test_accuracy(logits, labels)
         self.log('test_loss', loss)
-        self.log('test_acc', test_acc, prog_bar=True)
+        self.log('test_acc', acc, prog_bar=True)
         return loss
 
     def configure_optimizers(self):

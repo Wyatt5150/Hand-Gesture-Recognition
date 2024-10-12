@@ -1,8 +1,5 @@
 import sys
 import os
-# Add the project root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import torch
 import cv2
 import mediapipe as mp
@@ -11,20 +8,23 @@ from torchvision import transforms
 from PIL import Image
 from models.model import SignLanguageCNN  # Ensure this import is correct
 
+# Add the project root directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 # Define the label mapping (0-23 -> A-Z excluding J and Z)
-label_mapping = {
+label_mapping : dict = {
     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H',
     8: 'I', 9: 'K', 10: 'L', 11: 'M', 12: 'N', 13: 'O', 14: 'P',
     15: 'Q', 16: 'R', 17: 'S', 18: 'T', 19: 'U', 20: 'V', 21: 'W',
     22: 'X', 23: 'Y'
 }
 
-def load_model():
+def load_model() -> SignLanguageCNN:
     """
     Loads the trained SignLanguageCNN model from a checkpoint file.
 
     Returns:
-        model (SignLanguageCNN): The loaded and initialized gesture recognition model in evaluation mode.
+        SignLanguageCNN : The loaded and initialized gesture recognition model in evaluation mode.
     """
     model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'model.pth')
     model = SignLanguageCNN()
@@ -33,7 +33,7 @@ def load_model():
     return model
 
 
-def preprocess_image(hand_crop):
+def preprocess_image(hand_crop) -> torch.Tensor:
     """
     Preprocesses a cropped hand image to prepare it for input to the model.
     Converts the image to grayscale, resizes it to 28x28 pixels, and transforms it into a tensor.
@@ -127,7 +127,6 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     main()
