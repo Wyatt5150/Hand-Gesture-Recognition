@@ -7,6 +7,7 @@ import numpy as np
 from torchvision import transforms
 from PIL import Image
 from models.model import SignLanguageCNN  # Ensure this import is correct
+from scripts.stabilizer import Stabilizer
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -33,12 +34,12 @@ def load_model() -> SignLanguageCNN:
     return model
 
 
-def preprocess_image(hand_crop) -> torch.Tensor:
+def preprocess_image(hand_crop : np.ndarray) -> torch.Tensor:
     """
     Preprocesses a cropped hand image to prepare it for input to the model.
     Converts the image to grayscale, resizes it to 28x28 pixels, and transforms it into a tensor.
 
-    Args:
+    Parameters:
         hand_crop (numpy.ndarray): The cropped image of the hand, as a NumPy array from OpenCV.
 
     Returns:
@@ -75,6 +76,9 @@ def main():
     # Start capturing video
     cap = cv2.VideoCapture(0)
 
+    # Stabilizer
+    stabilizer = Stabilizer()
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -105,11 +109,13 @@ def main():
                         # Log the raw output values for debugging
                         print("Model output:", output)
 
-                        _, predicted = torch.max(output, 1)
+                        confidence, predicted = torch.max(output, 1)
                         gesture_label = predicted.item()
+
 
                         # Get the associated letter from the label
                         letter = label_mapping.get(gesture_label, "Unknown")
+                        letter = stabilizer.group_stabilize(letter, confidence)
 
                         # Display the predicted letter on the frame
                         cv2.putText(frame, f'Letter: {letter}', (10, 30),
