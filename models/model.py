@@ -9,7 +9,7 @@ class SignLanguageCNN(LightningModule):
         """
         Initializes the SignLanguageCNN model with increased features.
 
-        Args:
+        Parameters:
             num_classes (int) : Number of output classes (default is 24).
             learning_rate (float) : Learning rate for the optimizer (default is 0.0001).
         """
@@ -52,7 +52,7 @@ class SignLanguageCNN(LightningModule):
         """
         Forward pass through the network.
 
-        Args:
+        Parameters:
             tensor (torch.Tensor) : Input tensor.
 
         Returns:
@@ -74,7 +74,7 @@ class SignLanguageCNN(LightningModule):
         """
         Training step for the model.
 
-        Args:
+        Parameters:
             batch (tuple) : Tuple containing input data and labels.
             batch_idx (int) : Batch index.
 
@@ -94,7 +94,7 @@ class SignLanguageCNN(LightningModule):
         """
         Validation step for the model.
 
-        Args:
+        Parameters:
             batch (tuple) : Tuple containing input data and labels.
             batch_idx (int) : Batch index.
 
@@ -114,7 +114,7 @@ class SignLanguageCNN(LightningModule):
         """
         Test step for the model.
 
-        Args:
+        Parameters:
             batch (tuple): Tuple containing input data and labels.
             batch_idx (int): Batch index.
 
