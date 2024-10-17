@@ -1,3 +1,9 @@
+'''
+Ymai's Notes
+    I couldnt find any other scripts that use this script
+    why does this exist
+'''
+
 import os
 import sys
 # Add the project root directory to sys.path

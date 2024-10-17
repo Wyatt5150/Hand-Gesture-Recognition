@@ -1,3 +1,9 @@
+'''
+Ymai's Notes
+    Renamed SignLanguageMNISTDataModule to DataModule
+    see notes in dataModule.py for more information 
+'''
+
 """
 This script trains a Sign Language gesture recognition model using PyTorch Lightning.
 It supports data loading, model checkpointing, early stopping, and automatic GPU utilization.
@@ -15,7 +21,7 @@ import pytorch_lightning as pl
 import torch  # Import torch for saving model weights
 from models.model import SignLanguageCNN
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-from scripts.dataModule import SignLanguageMNISTDataModule
+from scripts.dataModule import DataModule
 
 # Check and print GPU availability once at the beginning of the script
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
@@ -25,7 +31,7 @@ class TrainModel:
     A class to manage the training process of the SignLanguageCNN model using PyTorch Lightning.
 
     Attributes:
-        data_module (SignLanguageMNISTDataModule): Instance of the data module for loading and augmenting data.
+        data_module (DataModule): Instance of the data module for loading and augmenting data.
         model (SignLanguageCNN): Instance of the gesture recognition model.
         checkpoint_dir (str): Directory path for saving model checkpoints.
     """
@@ -33,10 +39,10 @@ class TrainModel:
         """
         Initializes the TrainModel class, setting up the data module, model, and checkpoint directory.
         """
-        self.data_module = SignLanguageMNISTDataModule(
-            train_csv='custom_sign_language_train.csv',
-            val_csv='custom_sign_language_val.csv',
-            test_csv='custom_sign_language_test.csv',
+        self.data_module = DataModule(
+            train_csv='sign_mnist_train.csv',
+            val_csv='sign_mnist_test.csv',
+            test_csv='sign_mnist_test.csv',
             batch_size=128,
             apply_augmentation=True  # Set to True for training
         )

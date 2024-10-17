@@ -1,3 +1,15 @@
+'''
+Ymai's notes
+    added proper type hinting
+
+    Renamed SignLanguageMNISTDataModule to DataModule
+        this class isnt specialized just for the signlanguageMNIST data set
+        there is no reason that you needed to make the class name that long
+
+    DataModule.setup()
+        stage is never used so i am removing it
+'''
+
 import os  # Import os for file path management
 import pytorch_lightning as pl
 import torch  # Import torch here for tensor operations
@@ -9,7 +21,7 @@ from PIL import Image
 
 
 class CustomDataset(Dataset):
-    def __init__(self, csv_file, transform=None):
+    def __init__(self, csv_file:str, transform:callable=None):
         """
         Initializes the CustomDataset.
 
@@ -17,10 +29,10 @@ class CustomDataset(Dataset):
             csv_file (str): Path to the CSV file containing labels and pixel values for images.
             transform (callable, optional): Optional transformation to be applied on an image sample.
         """
-        self.data_frame = pd.read_csv(csv_file)  # Load the CSV file
-        self.transform = transform
+        self.data_frame:pd.DataFrame = pd.read_csv(csv_file)  # Load the CSV file
+        self.transform:callable = transform # transform will be applied when an item is retrieved
 
-    def __len__(self):
+    def __len__(self)->int:
         """
           Returns the number of samples in the dataset.
 
@@ -29,9 +41,9 @@ class CustomDataset(Dataset):
           """
         return len(self.data_frame)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx:int)->tuple[Image.Image, int]:
         """
-          Retrieves an image and label pair for a given index.
+          Retrieves the tuple (image:, label) for a given index.
 
           Args:
               idx (int): Index of the sample to retrieve.
@@ -53,11 +65,11 @@ class CustomDataset(Dataset):
         if self.transform:
             image = self.transform(image)  # Apply any transformations
 
-        return image, label
+        return (image, label)
 
 
 # Define the cutout transformation function
-def cutout_transform(img, size=8):
+def cutout_transform(img, size:int=8)->torch.Tensor:
     """
     Applies cutout augmentation to an image.
 
@@ -72,7 +84,7 @@ def cutout_transform(img, size=8):
 
 
 # Cutout function that modifies the image
-def cutout_fn(img, size=8):
+def cutout_fn(img:torch.Tensor, size:int=8)->torch.Tensor:
     """
     Zeroes out a randomly located square patch in the image for cutout augmentation.
 
@@ -96,10 +108,10 @@ def cutout_fn(img, size=8):
     return img
 
 
-class SignLanguageMNISTDataModule(pl.LightningDataModule):
-    def __init__(self, train_csv, val_csv, test_csv, batch_size, apply_augmentation=True):
+class DataModule(pl.LightningDataModule):
+    def __init__(self, train_csv:str, val_csv:str, test_csv:str, batch_size:int, apply_augmentation:bool=True):
         """
-        Initializes the SignLanguageMNISTDataModule.
+        Initializes the DataModule based on specified paths
 
         Args:
             train_csv (str): Path to the training CSV file.
@@ -145,19 +157,16 @@ class SignLanguageMNISTDataModule(pl.LightningDataModule):
             transforms.Normalize(mean=[0.5], std=[0.5])
         ])
 
-    def prepare_data(self):
+    def prepare_data(self)->None:
         """
         Prepares data if necessary. This function is a placeholder for any required data preparation steps.
         """
         # Prepare your data here if necessary
         pass
 
-    def setup(self, stage=None):
+    def setup(self)->None:
         """
         Sets up the datasets for training, validation, and testing.
-
-        Args:
-            stage (str, optional): The stage of the setup ('fit', 'test', etc.). Defaults to None.
         """
         # Apply augmentations only to the training dataset
         self.train_dataset = CustomDataset(os.path.join('..', 'data', self.train_csv),

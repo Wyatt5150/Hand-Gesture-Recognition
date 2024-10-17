@@ -1,3 +1,9 @@
+'''
+Ymai's Notes
+    This appears to be an out of date version of gesture.py that also allows you to pick a version of the model
+    I dont understand why this exists
+'''
+
 import sys
 import os
 import cv2

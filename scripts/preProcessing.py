@@ -1,3 +1,9 @@
+'''
+Ymai's Notes
+    this seems like a worse version of dataModule.py and i didnt find anything that uses it
+    why does this exist
+'''
+
 import os
 import pandas as pd
 import numpy as np

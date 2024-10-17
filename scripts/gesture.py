@@ -1,3 +1,8 @@
+'''
+Ymai's notes:
+    Added a comment in the imports because I made that mistake and will likely do it again without the comment
+
+'''
 import sys
 import os
 import torch
@@ -6,11 +11,13 @@ import mediapipe as mp
 import numpy as np
 from torchvision import transforms
 from PIL import Image
-from models.model import SignLanguageCNN  # Ensure this import is correct
-from scripts.stabilizer import Stabilizer
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# DONT MOVE THESE ABOVE sys.path.append(...) OR ELSE THE PROGRAM CANT FIND THEM
+from models.model import SignLanguageCNN  # Ensure this import is correct
+from scripts.stabilizer import Stabilizer
 
 # Define the label mapping (0-23 -> A-Z excluding J and Z)
 label_mapping : dict = {

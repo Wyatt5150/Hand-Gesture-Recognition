@@ -36,34 +36,32 @@ Set your Conda Environment
     python main.py
 
 
-## Project File Overview
-1. Data Directory
-   - CSV Files to Train and Test model
-   - Reference ASL PNG
+## Important Files/Directories
+- scripts
+   - gesture.py
+
+      Identifies hand gestures in real time. Type q to quit video.
+
+   - dataModule.py
+
+      Loads and prepares data so it can be used for training
+
+   - trainModel.py
+
+      Used to train model.
+
+   - preProcessing.py
+   
+      Outdated version of dataModule.py
+
+   - VersionGestures.py
+   
+      Outdated version of gesture.py with model version feature
+   
+   - loadModel.py
+
+      unused. Loads specified version of model
 
 
-2. Images Directory
-   - Testing images set for ASL
-
-
-3. Models Directory
-   - Defines CNN
-   - Forward and Backward Pass
-
-
-4. Scripts Directory
-   - Gesture: Real Time Hand Recognition. Type q to quit video.
-   - preProcessing: Prepares data before uploads
-   - testingCSV: Evaluates CSV data & Randomly shows 5 images
-   with associated letter.
-   - trainModel: Process for CNN to learn 
-   - validateImage: Processes New 3 channel images 
-
-
-6. tb_logs Directory
-   - Tensor Board that tracks Loss, 
-   Accuracy, Learning Rate, Gradient Descent
-
-
-6. utils Directory
-   - unused  
+- utils
+   - TODO
