@@ -11,6 +11,7 @@ import mediapipe as mp
 import numpy as np
 from torchvision import transforms
 from PIL import Image
+import time
 
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -83,57 +84,71 @@ def main():
     # Start capturing video
     cap = cv2.VideoCapture(0)
 
+    # Where to split image in half
+    ret, frame = cap.read()
+    width_center = frame.shape[1]//2
+
+    # black block to visually divide left and right frames
+    block= np.zeros((frame.shape[0], 10, 3), dtype=np.uint8)
+
     # Stabilizer
-    stabilizer = Stabilizer()
+    stabilizers = [Stabilizer(),Stabilizer()]
 
     while cap.isOpened():
-        ret, frame = cap.read()
+        ret, videoFrame = cap.read()
         if not ret:
             break
-
+        videoFrame = cv2.flip(videoFrame, 1)
         # Process the frame with MediaPipe
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(frame_rgb)
+        #frame_rgb = cv2.cvtColor(videoFrame, cv2.COLOR_BGR2RGB)
+
+        # split camera fead into halves
+        frames = [videoFrame[:, :width_center], videoFrame[:, width_center:]]
 
         # Draw hand landmarks and process the detected hand
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                # Extract the bounding box for the hand
-                x_max = int(max([lm.x for lm in hand_landmarks.landmark]) * frame.shape[1])
-                x_min = int(min([lm.x for lm in hand_landmarks.landmark]) * frame.shape[1])
-                y_max = int(max([lm.y for lm in hand_landmarks.landmark]) * frame.shape[0])
-                y_min = int(min([lm.y for lm in hand_landmarks.landmark]) * frame.shape[0])
+        for i in range(2):
+            frame = frames[i]
+            stabilizer = stabilizers[i]
+            results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            if results.multi_hand_landmarks:
+                for hand_landmarks in results.multi_hand_landmarks:
+                    # Extract the bounding box for the hand
+                    x_max = int(max([lm.x for lm in hand_landmarks.landmark]) * frame.shape[1])
+                    x_min = int(min([lm.x for lm in hand_landmarks.landmark]) * frame.shape[1])
+                    y_max = int(max([lm.y for lm in hand_landmarks.landmark]) * frame.shape[0])
+                    y_min = int(min([lm.y for lm in hand_landmarks.landmark]) * frame.shape[0])
 
-                # Crop the hand region from the frame
-                hand_crop = frame[y_min:y_max, x_min:x_max]
-                if hand_crop.size != 0:
-                    hand_tensor = preprocess_image(hand_crop)
+                    # Crop the hand region from the frame
+                    hand_crop = frame[y_min:y_max, x_min:x_max]
+                    if hand_crop.size != 0:
+                        hand_tensor = preprocess_image(hand_crop)
 
-                    # Make prediction
-                    with torch.no_grad():
-                        output = model(hand_tensor)
+                        # Make prediction
+                        with torch.no_grad():
+                            output = model(hand_tensor)
 
-                        # Log the raw output values for debugging
-                        print("Model output:", output)
+                            # Log the raw output values for debugging
+                            print("Model output:", output)
 
-                        confidence, predicted = torch.max(output, 1)
-                        gesture_label = predicted.item()
+                            confidence, predicted = torch.max(output, 1)
+                            gesture_label = predicted.item()
 
 
-                        # Get the associated letter from the label
-                        letter = label_mapping.get(gesture_label, "Unknown")
-                        letter = stabilizer.group_stabilize(letter, confidence)
+                            # Get the associated letter from the label
+                            letter = label_mapping.get(gesture_label, "Unknown")
+                            letter = stabilizer.group_stabilize(letter, confidence)
 
-                        # Display the predicted letter on the frame
-                        cv2.putText(frame, f'Letter: {letter}', (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                            # Display the predicted letter on the frame
+                            cv2.putText(frame, f'Letter: {letter}', (10, 30),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                # Draw landmarks
-                mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                    # Draw landmarks
+                    mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
         # Show the processed frame
-        cv2.imshow('Gesture Recognition', frame)
-
+        cv2.imshow('Gesture Recognition', cv2.hconcat([frames[0],block,frames[1]]))
+        # reduce how often the loop runs so my laptop doesnt explode
+        time.sleep(.1)
         # Exit on 'q' key press
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
