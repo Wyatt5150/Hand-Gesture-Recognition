@@ -22,6 +22,8 @@ Set Up Environment
     conda env create --file environment.yml
 
 
+NOTE: Some users had issues getting certain packages to work through conda. This was solved by installing packages and running the program outside a conda environment.
+
 ## Running The Project
 
 Set your Conda Environment
@@ -50,18 +52,13 @@ Set your Conda Environment
 
       Used to train model.
 
-   - preProcessing.py
-   
-      Outdated version of dataModule.py
+   - macros.py
 
-   - VersionGestures.py
-   
-      Outdated version of gesture.py with model version feature
-   
-   - loadModel.py
+      converts gestures into inputs to control a game
 
-      unused. Loads specified version of model
+   - stabilizer.py
 
+      stabilizes gesture detection output
 
 - utils
    - TODO
