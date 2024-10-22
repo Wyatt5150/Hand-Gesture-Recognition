@@ -148,7 +148,7 @@ def main():
         # Show the processed frame
         cv2.imshow('Gesture Recognition', cv2.hconcat([frames[0],block,frames[1]]))
         # reduce how often the loop runs so my laptop doesnt explode
-        time.sleep(.1)
+        time.sleep(.05)
         # Exit on 'q' key press
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

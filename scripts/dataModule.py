@@ -6,8 +6,16 @@ Ymai's notes
         this class isnt specialized just for the signlanguageMNIST data set
         there is no reason that you needed to make the class name that long
 
-    DataModule.setup()
-        stage is never used so i am removing it
+    CustomDataset
+        added prepare_data()
+            fixes the way mnist labeled the data
+
+    DataModule
+        setup()
+            parameter:stage is never used so i am removing it
+            fixed directory paths
+        removed prepare_data()
+            it fit more naturally into CustomDataset so I moved it
 '''
 
 import os  # Import os for file path management
@@ -30,7 +38,29 @@ class CustomDataset(Dataset):
             transform (callable, optional): Optional transformation to be applied on an image sample.
         """
         self.data_frame:pd.DataFrame = pd.read_csv(csv_file)  # Load the CSV file
+        self.prepare_data()
         self.transform:callable = transform # transform will be applied when an item is retrieved
+
+    def prepare_data(self) -> None:
+        '''
+        Makes nessecary adjustments to dataset
+
+        Args:
+            none
+        
+        Returns:
+            none
+        '''
+
+        # Fixes the labeling of datapoints past J
+        # the mnist dataset labeling skips over the number 9 (represents J) which messes with training
+        fixed_labels =[]
+        for label in self.data_frame['label']:
+            if label > 9:
+                label-=1
+            fixed_labels.append(label)
+
+        self.data_frame['label'] = fixed_labels
 
     def __len__(self)->int:
         """
@@ -157,23 +187,17 @@ class DataModule(pl.LightningDataModule):
             transforms.Normalize(mean=[0.5], std=[0.5])
         ])
 
-    def prepare_data(self)->None:
-        """
-        Prepares data if necessary. This function is a placeholder for any required data preparation steps.
-        """
-        # Prepare your data here if necessary
-        pass
-
     def setup(self)->None:
         """
         Sets up the datasets for training, validation, and testing.
         """
         # Apply augmentations only to the training dataset
-        self.train_dataset = CustomDataset(os.path.join('..', 'data', self.train_csv),
+        curDir = os.getcwd()
+        self.train_dataset = CustomDataset(os.path.join(curDir, 'data', self.train_csv),
                                            transform=self.data_transforms if self.apply_augmentation else self.test_val_transforms)
-        self.val_dataset = CustomDataset(os.path.join('..', 'data', self.val_csv),
+        self.val_dataset = CustomDataset(os.path.join(curDir, 'data', self.val_csv),
                                          transform=self.test_val_transforms)  # No augmentations
-        self.test_dataset = CustomDataset(os.path.join('..', 'data', self.test_csv),
+        self.test_dataset = CustomDataset(os.path.join(curDir, 'data', self.test_csv),
                                           transform=self.test_val_transforms)  # No augmentations
 
     def train_dataloader(self):
