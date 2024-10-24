@@ -56,16 +56,29 @@ class CustomDataset(Dataset):
         Returns:
             none
         '''
-
         # Fixes the labeling of datapoints past J
         # the mnist dataset labeling skips over the number 9 (represents J) which messes with training
         fixed_labels =[]
         for label in self.data_frame['label']:
             if label > 9:
-                label-=1
+                label-=1    
             fixed_labels.append(label)
-
         self.data_frame['label'] = fixed_labels
+
+        # filter to only include valid labels
+        valid = [0,1,2,3]
+        # relabel data to remove gaps and mark invalid
+        fixed_labels = []
+        for label in self.data_frame['label']:
+            if label in valid:
+                fixed_labels.append(valid.index(label))
+            else:
+                fixed_labels.append(-99)
+        self.data_frame['label'] = fixed_labels
+
+        # remove invalid rows
+        self.data_frame = self.data_frame[self.data_frame['label'] >= 0]
+        
 
     def __len__(self)->int:
         """
