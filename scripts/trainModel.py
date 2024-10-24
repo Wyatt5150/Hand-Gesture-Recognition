@@ -2,6 +2,8 @@
 Ymai's Notes
     Renamed SignLanguageMNISTDataModule to DataModule
     see notes in dataModule.py for more information 
+
+    removed tensorflow cause we dont use it
 '''
 
 """
@@ -16,15 +18,12 @@ import glob  # Import glob to find the latest checkpoint
 # Add the project root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import tensorflow as tf
 import pytorch_lightning as pl
 import torch  # Import torch for saving model weights
 from models.model import SignLanguageCNN
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.strategies import DDPStrategy
 from scripts.dataModule import DataModule
-
-# Check and print GPU availability once at the beginning of the script
-print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
 class TrainModel:
     """
@@ -40,9 +39,7 @@ class TrainModel:
         Initializes the TrainModel class, setting up the data module, model, and checkpoint directory.
         """
         self.data_module = DataModule(
-            train_csv='sign_mnist_train.csv',
-            val_csv='sign_mnist_test.csv',
-            test_csv='sign_mnist_test.csv',
+            dataset='sign_mnist',
             batch_size=128,
             apply_augmentation=True  # Set to True for training
         )
@@ -74,7 +71,8 @@ class TrainModel:
          """
         # Call setup to initialize datasets
         self.data_module.setup()
-
+        if os.name == 'nt': # if on windows os use gloo (default is nccl with is not supported by windows)
+            ddp = DDPStrategy(process_group_backend="gloo") 
         # Setup callbacks for early stopping and model checkpointing
         checkpoint_callback = ModelCheckpoint(
             monitor="val_loss",
@@ -102,7 +100,8 @@ class TrainModel:
             callbacks=[checkpoint_callback, early_stop_callback],
             logger=logger,
             accelerator='auto',  # Automatically use GPU if available
-            devices='auto'       # Automatically use as many devices as possible
+            devices='auto',       # Automatically use as many devices as possible
+            strategy=ddp
         )
 
         # Load model from the latest checkpoint if it exists

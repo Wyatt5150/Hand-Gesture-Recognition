@@ -11,6 +11,11 @@ Ymai's notes
             fixes the way mnist labeled the data
 
     DataModule
+        init
+            removed parameters: train_csv, val_csv, test_csv
+                removed parameters replaced with one parameter called: dataset
+                datasets should be named '<dataset>_train.csv' and '<dataset>_test.csv'
+                datasets should be place in their respective folders in data
         setup()
             parameter:stage is never used so i am removing it
             fixed directory paths
@@ -139,7 +144,7 @@ def cutout_fn(img:torch.Tensor, size:int=8)->torch.Tensor:
 
 
 class DataModule(pl.LightningDataModule):
-    def __init__(self, train_csv:str, val_csv:str, test_csv:str, batch_size:int, apply_augmentation:bool=True):
+    def __init__(self, dataset:str, batch_size:int, apply_augmentation:bool=True):
         """
         Initializes the DataModule based on specified paths
 
@@ -151,9 +156,9 @@ class DataModule(pl.LightningDataModule):
             apply_augmentation (bool): Whether to apply data augmentations to the training set.
         """
         super().__init__()
-        self.train_csv = train_csv
-        self.val_csv = val_csv
-        self.test_csv = test_csv
+        self.train_csv = dataset+'_train.csv'
+        self.val_csv = dataset+'_train.csv'
+        self.test_csv = dataset+'_test.csv'
         self.batch_size = batch_size
         self.apply_augmentation = apply_augmentation  # Flag to control augmentation
 
@@ -193,11 +198,12 @@ class DataModule(pl.LightningDataModule):
         """
         # Apply augmentations only to the training dataset
         curDir = os.getcwd()
-        self.train_dataset = CustomDataset(os.path.join(curDir, 'data', self.train_csv),
+        print(curDir)
+        self.train_dataset = CustomDataset(os.path.join(curDir, 'data','train', self.train_csv),
                                            transform=self.data_transforms if self.apply_augmentation else self.test_val_transforms)
-        self.val_dataset = CustomDataset(os.path.join(curDir, 'data', self.val_csv),
+        self.val_dataset = CustomDataset(os.path.join(curDir, 'data','train', self.val_csv),
                                          transform=self.test_val_transforms)  # No augmentations
-        self.test_dataset = CustomDataset(os.path.join(curDir, 'data', self.test_csv),
+        self.test_dataset = CustomDataset(os.path.join(curDir, 'data','test', self.test_csv), 
                                           transform=self.test_val_transforms)  # No augmentations
 
     def train_dataloader(self):
