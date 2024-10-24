@@ -38,13 +38,18 @@ class TrainModel:
         """
         Initializes the TrainModel class, setting up the data module, model, and checkpoint directory.
         """
+        file = open("validLetters.txt", 'r+')
+        validLetters = file.read().split()
+
         self.data_module = DataModule(
             dataset='sign_mnist',
             batch_size=128,
             apply_augmentation=True  # Set to True for training
         )
-        self.model = SignLanguageCNN(num_classes=24, learning_rate=0.0001)
+        self.model = SignLanguageCNN(num_classes=len(validLetters), learning_rate=0.0001)
         self.checkpoint_dir = os.path.join(os.path.dirname(__file__), '..', 'utils', 'checkpoints')
+
+        file.close()
 
     def get_latest_checkpoint(self):
         """

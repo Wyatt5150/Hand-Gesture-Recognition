@@ -21,12 +21,21 @@ from models.model import SignLanguageCNN  # Ensure this import is correct
 from scripts.stabilizer import Stabilizer
 
 # Define the label mapping (0-23 -> A-Z excluding J and Z)
+'''
 label_mapping : dict = {
     0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H',
     8: 'I', 9: 'K', 10: 'L', 11: 'M', 12: 'N', 13: 'O', 14: 'P',
     15: 'Q', 16: 'R', 17: 'S', 18: 'T', 19: 'U', 20: 'V', 21: 'W',
     22: 'X', 23: 'Y'
-}
+}'''
+label_mapping:dict = {}
+file = open("validLetters.txt", 'r+')
+i = 0
+for letter in file.read().upper().split():
+    label_mapping[i] = letter
+    i+=1
+file.close()
+print(label_mapping)
 
 def load_model() -> SignLanguageCNN:
     """
@@ -36,7 +45,7 @@ def load_model() -> SignLanguageCNN:
         SignLanguageCNN : The loaded and initialized gesture recognition model in evaluation mode.
     """
     model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'model.pth')
-    model = SignLanguageCNN()
+    model = SignLanguageCNN(num_classes = len(label_mapping.keys()))
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')), strict=False)
     model.eval()
     return model
