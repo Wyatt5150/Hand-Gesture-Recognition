@@ -22,9 +22,23 @@ bindings:dict={
     'Stop': 'stop'
 
 }
-prevAction = "Stop" # last action
+prevActions:list=[] # last action
 
-def input(gesture:str, hand:str = 'right')->None:
+def set_zones(zones:int = 1)-> None:
+    '''
+    Tells script how many camera zones there are
+
+    Parameters:
+        zones: number of camera zones there are
+
+    Returns:
+        none
+    '''
+
+    for i in range(zones):
+        prevActions.append('Unknown')
+
+def input(gesture:str, zone:int = 0)->None:
     '''
     Converts given gesture to an action that will be performed in game
 
@@ -52,19 +66,18 @@ def input(gesture:str, hand:str = 'right')->None:
     Returns:
         none
     '''
-    
-    action = gestureToAction(gesture, hand)
-    key = bindings[action]
+
+    action = gestureToAction(gesture, zone, 'Unknown')
+    key = bindings.get(action,'Unknown')
+    prevAction = prevActions[zone]
 
     if action in ['Roll','Attack','Heal']: # mash these actions as long as action is performed
-        print(gesture, " ",action, " ", key)
         keyboard.press(key)
-        time.sleep(.1)
         keyboard.release(key)
         pass
     if action != prevAction:
         # change only occurs if this is a 'new' input
-        print(gesture, " ",action, " ", key)
+        '''
         match action:
             # deal with new action
             case 'Stop':
@@ -96,8 +109,16 @@ def input(gesture:str, hand:str = 'right')->None:
             # deal with old action
             case 'Sprint':
                 keyboard.release(bindings['Sprint'])
+        '''
+        
+        if action != "Unknown":
+            keyboard.press(key)
+            if action == "Camera":
+                keyboard.release(key)
+        if prevAction != "Unknown":
+            keyboard.release(bindings[prevAction])
 
-        prevAction = action
+        prevActions[zone] = action
                 
 def releaseAll():
     '''
@@ -113,45 +134,42 @@ def releaseAll():
         if k != "stop":
             keyboard.release(k)
 
-def gestureToAction(gesture:str, hand:str = 'right')->str:
+def gestureToAction(gesture:str, zone:int = 0, default:str='Unknown')->str:
     '''
     Returns the action that corresponds to the given gesture
 
     Parameters:
         gesture: string indicating what gesture the user performed
-        hand: indicates hand performed the gesture, should be either 'left' or 'right'
+        zone: indicates which region of the webcam the hand gesture was performed in
 
     Returns:
         name of the action that corresponds with gesture
     '''
 
-    match gesture:
-        case 'a'|'e'|'m'|'n'|'s'|'t'|'x':
-            gesture = 'fist'
-        case 'd'|'l':
-            gesture ='one'
-        case 'k'|'r'|'u'|'v':
-            gesture ='two'
-        case 'c'|'o':
-            gesture ='o'
-        case 'i'|'y':
-            gesture = 'pinky'
-        case 'q':
-            gesture = 'q'
+    match zone:
+        case 1: # right
+            match gesture:
+                case 'A':
+                    return 'Attack'
+                case 'O':
+                    return 'Camera'
+                case 'G' | 'H':
+                    return 'Roll'
+                case 'Y'|'F':
+                    return 'Heal'
+                case _:
+                    return default
+        case 0: # left
+            match gesture:
+                case 'A':
+                    return 'Forward'
+                case 'O':
+                    return 'Back'
+                case 'G'|'H':
+                    return 'Right'
+                case 'Y'|'F':
+                    return 'Left'
+                case _:
+                    return default
         case _:
-            gesture = "Unknown"
-
-    if hand == "right":
-        match gesture:
-            case 'q': 'Camera'
-            case 'fist': 'Attack' 
-            case 'o': 'Roll'
-            case 'pinky': 'Sprint'
-            case 'one': 'Heal'
-    else:
-        match gesture:
-            case 'fist': 'Forward'
-            case 'pinky': 'Left'
-            case 'o': 'Back'
-            case 'one': 'Right'
-            case 'q': 'Stop'
+            return default
