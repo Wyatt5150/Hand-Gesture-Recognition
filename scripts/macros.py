@@ -66,9 +66,9 @@ def input(gesture:str, zone:int = 0)->None:
     Returns:
         none
     '''
-
-    action = gestureToAction(gesture, zone, 'Unknown')
-    key = bindings.get(action,'Unknown')
+    default = "Unknown"
+    action = gestureToAction(gesture, zone, default)
+    key = bindings.get(action,default)
     prevAction = prevActions[zone]
 
     if action in ['Roll','Attack','Heal']: # mash these actions as long as action is performed
@@ -77,45 +77,11 @@ def input(gesture:str, zone:int = 0)->None:
         pass
     if action != prevAction:
         # change only occurs if this is a 'new' input
-        '''
-        match action:
-            # deal with new action
-            case 'Stop':
-                releaseAll()
-            case 'Forward'|'Left'|'Right'|'Back'|'Sprint':
-                # hold
-                print("hold")
-                keyboard.press(key)
-                match key:
-                    # QOL for contradictory movement
-                    case 'Forward':
-                        key.release(bindings["Back"])
-                    case 'Back':
-                        key.release(bindings["Foward"])
-                    case 'Left':
-                        key.release(bindings["Right"])
-                    case 'Right':
-                        key.release(bindings["Left"])
-            case 'Camera':
-                print("Tap")
-                # Tap
-                keyboard.press(key)
-                time.sleep(.1)
-                keyboard.release(key)
-            case _:
-                print(action,"not found")
-
-        match prevAction:
-            # deal with old action
-            case 'Sprint':
-                keyboard.release(bindings['Sprint'])
-        '''
-        
-        if action != "Unknown":
+        if action != default:
             keyboard.press(key)
             if action == "Camera":
                 keyboard.release(key)
-        if prevAction != "Unknown":
+        if prevAction != default:
             keyboard.release(bindings[prevAction])
 
         prevActions[zone] = action
@@ -136,7 +102,7 @@ def releaseAll():
 
 def gestureToAction(gesture:str, zone:int = 0, default:str='Unknown')->str:
     '''
-    Returns the action that corresponds to the given gesture
+    Returns the action that corresponds to the given gesture and zone
 
     Parameters:
         gesture: string indicating what gesture the user performed
@@ -145,31 +111,24 @@ def gestureToAction(gesture:str, zone:int = 0, default:str='Unknown')->str:
     Returns:
         name of the action that corresponds with gesture
     '''
+    conversions = [
+        { 
+            'Forward': ['A'],
+            'Back': ['O','C'],
+            'Left': ['Y','F'],
+            'Right': ['L','T']
+        },
+        { 
+            'Attack': ['A'],
+            'Heal': ['O','C'],
+            'Camera': ['Y','F'],
+            'Roll': ['L','T']
+        }
+    ]
 
-    match zone:
-        case 1: # right
-            match gesture:
-                case 'A':
-                    return 'Attack'
-                case 'O':
-                    return 'Camera'
-                case 'G' | 'H':
-                    return 'Roll'
-                case 'Y'|'F':
-                    return 'Heal'
-                case _:
-                    return default
-        case 0: # left
-            match gesture:
-                case 'A':
-                    return 'Forward'
-                case 'O':
-                    return 'Back'
-                case 'G'|'H':
-                    return 'Right'
-                case 'Y'|'F':
-                    return 'Left'
-                case _:
-                    return default
-        case _:
-            return default
+    conversion = conversions[zone]
+
+    for action in conversion.keys():
+        if gesture in conversion[action]:
+            return action
+    return default

@@ -1,14 +1,8 @@
-'''
-Ymai's notes:
-    Added a comment in the imports because I made that mistake and will likely do it again without the comment
-
-'''
-
 """
     Main script to run the gesture recognition model on webcam input in real-time.
 
     Displays the webcam feed and predicted letter on the screen
-    Terminate by pressing the 'q' key.
+    Terminate by pressing the '0' key.
 """
 
 import sys
@@ -37,16 +31,6 @@ label_mapping : dict = {
     15: 'Q', 16: 'R', 17: 'S', 18: 'T', 19: 'U', 20: 'V', 21: 'W',
     22: 'X', 23: 'Y'
 }
-'''
-label_mapping:dict = {}
-file = open("validLetters.txt", 'r+')
-i = 0
-for letter in file.read().upper().split():
-    label_mapping[i] = letter
-    i+=1
-file.close()
-print(label_mapping)
-'''
 
 def main():
     """
@@ -120,7 +104,7 @@ def main():
                         macros.input(letter, i)
 
                         # Log the raw output values for debugging
-                        #print("Model output:", str(gesture_label)," ",letter, "\n", output)
+                        print("Model output:", str(gesture_label)," ",letter, "\n", output)
 
                         # Display the predicted letter on the frame
                         cv2.putText(frame, f'Letter: {letter}', (10, 30),
@@ -132,7 +116,7 @@ def main():
         # Show the processed frame
         cv2.imshow('Gesture Recognition', cv2.hconcat([frames[0],block,frames[1]]))
         # reduce how often the loop runs so my laptop doesnt explode
-        time.sleep(.1)
+        #time.sleep(.05)
         # Exit on 'q' key press
         if cv2.waitKey(1) & 0xFF == ord('0'):
             break
@@ -143,7 +127,10 @@ def main():
 
 def load_model() -> SignLanguageCNN:
     """
-    Loads the trained SignLanguageCNN model from a checkpoint file.
+    Loads the trained SignLanguageCNN model
+
+    Parameters:
+        none
 
     Returns:
         SignLanguageCNN : The loaded and initialized gesture recognition model in evaluation mode.

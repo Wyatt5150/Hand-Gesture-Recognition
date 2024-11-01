@@ -24,6 +24,9 @@ class Stabilizer:
             detected. Defaults to 3.
             confidence_threshold (float) : The required confidence for an input
             to be valid. Defaults to 0.8.
+            
+        Returns:
+            none
         """
         self.default = default
         self.required = required

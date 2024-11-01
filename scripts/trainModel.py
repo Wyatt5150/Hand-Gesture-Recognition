@@ -1,11 +1,3 @@
-'''
-Ymai's Notes
-    Renamed SignLanguageMNISTDataModule to DataModule
-    see notes in dataModule.py for more information 
-
-    removed tensorflow cause we dont use it
-'''
-
 """
 This script trains a Sign Language gesture recognition model
 """
@@ -20,7 +12,7 @@ from scripts.model import SignLanguageCNN
 
 # Model Parameters
 dataset = 'sign_mnist'
-epochs = 10
+epochs = 20
 batch_size = 128
 model_file_name = 'model'
 
@@ -29,4 +21,4 @@ if __name__ == "__main__":
     # loads data and trains model based on values specified above
     data = DataModule(dataset)
     model = SignLanguageCNN()
-    model.train(dataset,batch_size=batch_size, epochs=epochs, model_name = model_file_name)
+    model.train(data, batch_size=batch_size, epochs=epochs, model_name = model_file_name)

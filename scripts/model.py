@@ -8,6 +8,12 @@ class SignLanguageCNN():
     def __init__(self) -> None:
         """
         Initializes the SignLanguageCNN model.
+
+        Parameters:
+            none
+
+        Returns:
+            none
         """
         self.model=Sequential()
         self.model.add(Conv2D(128,kernel_size=(5,5),
@@ -43,8 +49,8 @@ class SignLanguageCNN():
         self.model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
         test = data.get_test_data()
         train = data.get_train_data()
-        self.model.fit(data.get_train_data_generator.flow(train[1],train[0],batch_size=200),
-                epochs = 50,
+        self.model.fit(data.get_train_data_generator().flow(train[1],train[0],batch_size=200),
+                epochs = epochs,
                 validation_data=(test[1],test[0]),
                 shuffle=1
                 )
