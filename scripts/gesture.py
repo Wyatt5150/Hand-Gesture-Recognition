@@ -92,7 +92,7 @@ def main():
                         hand_tensor = preprocess_image(hand_crop)
 
                         # Make prediction
-                        output = model.predict(hand_tensor, batch_size=128)
+                        output = model(hand_tensor)
 
                         confidence = np.max(output)
                         gesture_label = np.argmax(output)
