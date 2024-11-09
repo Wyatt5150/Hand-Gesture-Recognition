@@ -58,7 +58,8 @@ def main():
     block= np.zeros((frame.shape[0], 5, 3), dtype=np.uint8)
 
     # Stabilizer
-    stabilizers = [Stabilizer(),Stabilizer()]
+    thresh = .0
+    stabilizers = [Stabilizer(confidence_threshold = thresh),Stabilizer(confidence_threshold = thresh)]
 
     macros.set_zones(2)
 
@@ -92,14 +93,14 @@ def main():
                         hand_tensor = preprocess_image(hand_crop)
 
                         # Make prediction
-                        output = model.predict(hand_tensor, batch_size=128)
+                        output = model(hand_tensor)
 
                         confidence = np.max(output)
                         gesture_label = np.argmax(output)
 
                         # Get the associated letter from the labeld
                         letter = label_mapping.get(gesture_label, "Unknown")
-                        letter = stabilizer.group_stabilize(letter, confidence)
+                        #letter = stabilizer.group_stabilize(letter, confidence)
 
                         macros.input(letter, i)
 
@@ -112,12 +113,12 @@ def main():
 
                     # Draw landmarks
                     mp.solutions.drawing_utils.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
-
+            else:
+                macros.input('none', i)
         # Show the processed frame
         cv2.imshow('Gesture Recognition', cv2.hconcat([frames[0],block,frames[1]]))
-        # reduce how often the loop runs so my laptop doesnt explode
-        #time.sleep(.05)
-        # Exit on 'q' key press
+        
+        # Exit on '0' key press
         if cv2.waitKey(1) & 0xFF == ord('0'):
             break
 

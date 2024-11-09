@@ -10,9 +10,11 @@ bindings:dict={
     'Left': 'a',
     'Back': 's',
     'Right': 'd',
+    'Jump': 'space',
 
     'Camera': 'q', 
     'Heal': 'f',
+    'Interact':'e',
 
     'Attack': 'p', 
     'Roll': 'left shift',
@@ -71,16 +73,15 @@ def input(gesture:str, zone:int = 0)->None:
     key = bindings.get(action,default)
     prevAction = prevActions[zone]
 
-    if action in ['Roll','Attack','Heal']: # mash these actions as long as action is performed
+    if action in ['Roll','Attack','Heal','Interact']: # mash these actions as long as action is performed
         keyboard.press(key)
+        time.sleep(.05)
         keyboard.release(key)
         pass
     if action != prevAction:
         # change only occurs if this is a 'new' input
         if action != default:
             keyboard.press(key)
-            if action == "Camera":
-                keyboard.release(key)
         if prevAction != default:
             keyboard.release(bindings[prevAction])
 
@@ -113,16 +114,18 @@ def gestureToAction(gesture:str, zone:int = 0, default:str='Unknown')->str:
     '''
     conversions = [
         { 
-            'Forward': ['A'],
-            'Back': ['O','C'],
+            'Forward': ['A','N'],
+            'Back': ['O','C','P'],
             'Left': ['Y','F'],
-            'Right': ['L','T']
+            'Right': ['L','T','V','X'],
+            'Interact': ['G','H']
         },
         { 
-            'Attack': ['A'],
-            'Heal': ['O','C'],
-            'Camera': ['Y','F'],
-            'Roll': ['L','T']
+            'Attack': ['A','N'],
+            'Heal': ['Y','F'],
+            'Camera': ['O','C','P'],
+            'Roll': ['L','T','V','X'],
+            'Jump' : ['G','H']
         }
     ]
 
