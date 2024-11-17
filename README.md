@@ -2,7 +2,7 @@
 Project for Computer Vision
 
 
-# First Time Set Up
+## First Time Set Up
 
 Clone Repo from GitBash
 1. Create a new directory to pull the project into
@@ -22,7 +22,9 @@ Set Up Environment
     conda env create --file environment.yml
 
 
-# Running The Project
+NOTE: Some users had issues getting certain packages to work through conda. This was solved by installing packages and running the program outside a conda environment.
+
+## Running The Project
 
 Set your Conda Environment
 1. Activate your conda environment:
@@ -34,3 +36,29 @@ Set your Conda Environment
 3. To run the project:
 
     python main.py
+
+
+## Important Files/Directories
+- scripts
+   - gesture.py
+
+      Identifies hand gestures in real time. Type q to quit video.
+
+   - dataModule.py
+
+      Loads and prepares data so it can be used for training
+
+   - trainModel.py
+
+      Used to train model.
+
+   - macros.py
+
+      converts gestures into inputs to control a game
+
+   - stabilizer.py
+
+      stabilizes gesture detection output
+
+- utils
+   - TODO

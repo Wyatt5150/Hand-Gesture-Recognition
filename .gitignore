@@ -1,0 +1,14 @@
+# PyCharm specific files
+.idea/
+*.iml
+
+# Other common ignores
+__pycache__/
+*.pyc
+*~
+
+data/
+images/
+utils/checkpoints/
+utils/lightning_logs/
+models/model1.md
